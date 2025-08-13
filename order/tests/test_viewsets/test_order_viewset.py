@@ -2,6 +2,7 @@ import json
 
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
 from order.factories import OrderFactory, UserFactory
@@ -15,11 +16,15 @@ class TestOrderViewSet(APITestCase):
     client = APIClient()
 
     def setUp(self):
+        self.user = UserFactory()
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+
         self.category = CategoryFactory(title="technology")
         self.product = ProductFactory(
             title="mouse", price=100, category=[self.category]
         )
-        self.order = OrderFactory(product=[self.product])
+        self.order = OrderFactory(product=[self.product], user=self.user)
 
     def test_order(self):
         response = self.client.get(reverse("order-list", kwargs={"version": "v1"}))
@@ -42,9 +47,8 @@ class TestOrderViewSet(APITestCase):
         )
 
     def test_create_order(self):
-        user = UserFactory()
         product = ProductFactory()
-        data = json.dumps({"products_id": [product.id], "user": user.id})
+        data = json.dumps({"products_id": [product.id], "user": self.user.id})
 
         response = self.client.post(
             reverse("order-list", kwargs={"version": "v1"}),
@@ -54,4 +58,6 @@ class TestOrderViewSet(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        created_order = Order.objects.get(user=user)
+        created_order = Order.objects.filter(user=self.user).latest("id")
+
+        self.assertEqual(created_order.user.id, self.user.id)
