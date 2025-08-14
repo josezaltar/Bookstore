@@ -1,36 +1,33 @@
-version: '3.9' # Mantém a versão da sintaxe, que é atual e robusta
-
 services:
-  web: # Seu serviço de aplicação Django
-    build: . # Constrói a imagem a partir do Dockerfile no diretório atual
-    container_name: bookstore_web_app # Um nome claro para o contêiner
-    ports:
-      - "8000:8000" # Mapeia a porta 8000 do host para a porta 8000 do contêiner
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app # Monta o diretório atual do projeto no diretório /app do contêiner (seu WORKDIR)
+      - app_data:/usr/src/app/
+    ports:
+      - 8000:8000
     env_file:
-      - ./.env.dev # Carrega variáveis de ambiente do seu arquivo .env.dev
+      - ./env.dev
     networks:
-      - backend # Conecta este serviço à rede 'backend'
+      - backend
     depends_on:
-      - db # Garante que o serviço 'db' seja iniciado antes deste
-    command: poetry run python manage.py runserver 0.0.0.0:8000 # Executa o servidor Django via Poetry
-
-  db: # Seu serviço de banco de dados PostgreSQL
-    image: postgres:16-alpine # Imagem oficial do PostgreSQL, versão 16, leve
-    container_name: bookstore_db # Um nome claro para o contêiner do banco de dados
-    volumes:
-      - pgdata:/var/lib/postgresql/data # Volume para persistir os dados do banco de dados
-    env_file:
-      - ./.env.dev # Carrega variáveis de ambiente (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) do .env.dev
-    networks:
-      - backend # Conecta este serviço à rede 'backend'
+      - db
+  db:
+    image: postgres:16.0-alpine
     ports:
-      - "5432:5432" # Opcional: Mapeia a porta do DB para o host para acesso externo (ex: com DBeaver)
-
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=bookstore_dev
+      - POSTGRES_PASSWORD=bookstore_dev
+      - POSTGRES_DB=bookstore_dev_db
+    networks:
+      - backend
 networks:
   backend:
-    driver: bridge # Define uma rede de ponte para os serviços se comunicarem
+    driver: bridge
 
 volumes:
-  pgdata: # Declara o volume nomeado para persistência dos dados do PostgreSQL
+  postgres_data:
+  app_data:
