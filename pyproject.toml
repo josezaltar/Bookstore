@@ -21,6 +21,10 @@ dependencies = [
 ]
 
 [tool.poetry]
+name = "bookstore"
+version = "0.1.0"
+description = "API da Bookstore com Django Rest Framework"
+authors = ["Seu Nome <seu.email@example.com>"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
