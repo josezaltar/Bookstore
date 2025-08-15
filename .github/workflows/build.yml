@@ -61,7 +61,7 @@ jobs:
         run: |
           echo "Waiting for database to be ready..."
           sleep 5
-          docker-compose exec web python manage.py migrate --noinput
+          docker-compose exec -T web python manage.py migrate --noinput
       
       # Executa os testes dentro do contêiner, agora com as migrações aplicadas
       - name: Run Tests
