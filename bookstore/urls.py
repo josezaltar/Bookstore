@@ -1,23 +1,28 @@
-# bookstore/urls.py
+"""bookstore URL Configuration
 
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/3.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+import debug_toolbar
 from django.contrib import admin
-from django.urls import path, include, re_path
-from rest_framework.authtoken import views  # Importe a view de token
-from django.http import HttpResponse
-
-
-def home_view(request):
-    """View de exemplo para a URL raiz."""
-    return HttpResponse("<h1>Bem-vindo a Bookstore</h1>")
-
+from django.urls import include, path, re_path
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
-    # Adicione a URL raiz que aponta para a view de exemplo
-    path("", home_view, name="home"),
+    path("__debug__/", include(debug_toolbar.urls)),
     path("admin/", admin.site.urls),
-    # URLs para as aplicações order e product
     re_path("bookstore/(?P<version>(v1|v2))/", include("order.urls")),
     re_path("bookstore/(?P<version>(v1|v2))/", include("product.urls")),
-    # Adicione a URL para a autenticação com token
-    path("api-token-auth/", views.obtain_auth_token),
+    path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
 ]

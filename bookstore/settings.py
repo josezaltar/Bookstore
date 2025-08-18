@@ -11,26 +11,22 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "5eeed80638efc3426e568d4720c10ae5")
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
-# Adicione o endereço do Render aos ALLOWED_HOSTS
-# O Render define a variável de ambiente 'RENDER', podemos usá-la
-# para detectar se estamos em produção.
-if os.environ.get("RENDER"):
-    ALLOWED_HOSTS = [os.environ.get("RENDER_EXTERNAL_HOSTNAME")]
-else:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -52,7 +48,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -74,7 +69,6 @@ TEMPLATES = [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
-                "django.template.context_processors.messages",
                 "django.contrib.messages.context_processors.messages",
             ],
         },
@@ -83,32 +77,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bookstore.wsgi.application"
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Database
-# A mágica acontece aqui:
-# Use a URL de ambiente 'DATABASE_URL' se ela existir (no Render)
-# Caso contrário, configure para o banco de dados do seu Docker Compose
-if os.environ.get("DATABASE_URL"):
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"), conn_max_age=600
-        )
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": os.environ.get("SQL_ENGINE"),
-            "NAME": os.environ.get("SQL_DATABASE"),
-            "USER": os.environ.get("SQL_USER"),
-            "PASSWORD": os.environ.get("SQL_PASSWORD"),
-            "HOST": os.environ.get("SQL_HOST"),
-            "PORT": os.environ.get("SQL_PORT"),
-        }
-    }
+# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+DATABASES = {
+    "default": {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -167,3 +149,11 @@ REST_FRAMEWORK = {
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+DEBUG = int(os.environ.get("DEBUG", default=0))
+
+# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
