@@ -11,30 +11,33 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-import dj_database_url
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "5eeed80638efc3426e568d4720c10ae5")
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
+)
+# A chave padrão será usada apenas se SECRET_KEY não for definida no ambiente.
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = int(os.environ.get("DEBUG", 0))
 
-# Adicione o endereço do Render aos ALLOWED_HOSTS
-# O Render define a variável de ambiente 'RENDER', podemos usá-la
-# para detectar se estamos em produção.
-if os.environ.get("RENDER"):
-    ALLOWED_HOSTS = [os.environ.get("RENDER_EXTERNAL_HOSTNAME")]
-else:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# ALLOWED_HOSTS para o Render e desenvolvimento local
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -46,12 +49,20 @@ INSTALLED_APPS = [
     "order",
     "product",
     "rest_framework",
-    "debug_toolbar",
     "rest_framework.authtoken",
 ]
 
+# Adicione django-debug-toolbar apenas se DEBUG_TOOLBAR_ENABLED for 1
+DEBUG_TOOLBAR_ENABLED = int(os.environ.get("DEBUG_TOOLBAR_ENABLED", 0))
+if DEBUG_TOOLBAR_ENABLED:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Adicione Whitenoise para servir arquivos estáticos em produção ANTES do CommonMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -59,8 +70,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
+
+# Adicione debug_toolbar.middleware.DebugToolbarMiddleware apenas se DEBUG_TOOLBAR_ENABLED for 1
+if DEBUG_TOOLBAR_ENABLED:
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "bookstore.urls"
 
@@ -74,7 +88,6 @@ TEMPLATES = [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
-                "django.template.context_processors.messages",
                 "django.contrib.messages.context_processors.messages",
             ],
         },
@@ -83,29 +96,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bookstore.wsgi.application"
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Database
-# A mágica acontece aqui:
-# Use a URL de ambiente 'DATABASE_URL' se ela existir (no Render)
-# Caso contrário, configure para o banco de dados do seu Docker Compose
-if os.environ.get("DATABASE_URL"):
+# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"), conn_max_age=600
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
         )
     }
 else:
     DATABASES = {
         "default": {
-            "ENGINE": os.environ.get("SQL_ENGINE"),
-            "NAME": os.environ.get("SQL_DATABASE"),
-            "USER": os.environ.get("SQL_USER"),
-            "PASSWORD": os.environ.get("SQL_PASSWORD"),
-            "HOST": os.environ.get("SQL_HOST"),
-            "PORT": os.environ.get("SQL_PORT"),
+            "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
+            "USER": os.environ.get("SQL_USER", ""),
+            "PASSWORD": os.environ.get("SQL_PASSWORD", ""),
+            "HOST": os.environ.get("SQL_HOST", ""),
+            "PORT": os.environ.get("SQL_PORT", ""),
         }
     }
 
@@ -147,6 +158,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Use Whitenoise para servir arquivos estáticos em produção
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -164,6 +181,11 @@ REST_FRAMEWORK = {
     ],
 }
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+# INTERNAL_IPS para django-debug-toolbar
+if DEBUG_TOOLBAR_ENABLED:
+    INTERNAL_IPS = [
+        "127.0.0.1",
+    ]
+
+# Configuração adicional para o django-extensions
+SHELL_PLUS = "ipython"

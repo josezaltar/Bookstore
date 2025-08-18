@@ -7,58 +7,39 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "django (>=5.2.4,<6.0.0)",
-    "djangorestframework (>=3.16.0,<4.0.0)",
-    "django-rest-framework (>=0.1.0,<0.2.0)",
-    "pytest-django (>=4.11.1,<5.0.0)",
-    "faker (>=37.5.3,<38.0.0)",
-    "factory-boy (>=3.3.3,<4.0.0)",
-    "pytest (>=8.4.1,<9.0.0)",
-    "django-extensions (>=4.1,<5.0)",
-    "django-debug-toolbar (>=6.0.0,<7.0.0)",
-    "whitenoise (>=6.9.0,<7.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)",
-    "flake8 (>=7.3.0,<8.0.0)",
-    "gunicorn (>=23.0.0,<24.0.0)",
-    "dj-database-url (>=3.0.1,<4.0.0)",
-    "gitpython (>=3.1.45,<4.0.0)"
-]
+
+# A seção [project].dependencies não é usada pelo Poetry para gerenciar dependências.
+# Suas dependências serão listadas abaixo em [tool.poetry.dependencies] e
+# [tool.poetry.group.dev.dependencies].
 
 [tool.poetry]
 name = "bookstore"
 version = "0.1.0"
 description = "API da Bookstore com Django Rest Framework"
-authors = ["José Zaltar <josezaltar@email.com>"]
-license = "MIT"
-readme = "README.md"
+authors = ["José Zaltar <josezaltar@email.com>"] # Use o mesmo autor do [project] ou atualize conforme preferir
 
 [tool.poetry.dependencies]
-python = ">=3.13"
+python = ">=3.13" # Garante compatibilidade com a versão do Python no Dockerfile
 django = ">=5.2.4,<6.0.0"
 djangorestframework = ">=3.16.0,<4.0.0"
+# django-rest-framework (>=0.1.0,<0.2.0) - Removido pois 'djangorestframework' é o pacote correto.
+# Se for um pacote diferente, por favor, me avise.
 django-extensions = ">=4.1,<5.0"
-django-debug-toolbar = ">=6.0.0,<7.0.0"
 whitenoise = ">=6.9.0,<7.0.0"
 psycopg2-binary = ">=2.9.10,<3.0.0"
 gunicorn = ">=23.0.0,<24.0.0"
-dj-database-url = ">=3.0.1,<4.0.0"
-gitpython = ">=3.1.45,<4.0.0"
-flake8 = ">=7.3.0,<8.0.0"
-# Note: Removi as dependências de testes daqui para o grupo dev
+dj-database-url = ">=2.1.0,<3.0.0" # Adicionado: Essencial para o Render e a configuração do DB
+asgiref = "*" # Geralmente uma dependência transitiva do Django, bom garantir que está presente se necessário.
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.4.1,<9.0.0"
+pytest-django = ">=4.11.1,<5.0.0"
 factory-boy = ">=3.3.3,<4.0.0"
 faker = ">=37.5.3,<38.0.0"
-pytest-django = ">=4.11.1,<5.0.0"
-black = "^24.4.2" # Adicionei black para formatação de código
-mypy = "^1.10.0" # Adicionei mypy para tipagem
+django-debug-toolbar = ">=6.0.0,<7.0.0"
+flake8 = ">=7.3.0,<8.0.0"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 118
-target-version = ['py313']
