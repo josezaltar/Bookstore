@@ -7,10 +7,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # A versão do Python deve corresponder ao seu pyproject.toml
         python-version: [3.13]
 
     runs-on: ubuntu-latest
+
+    services:
+      # Adicionando um serviço PostgreSQL
+      db:
+        image: postgres:13
+        ports:
+          - 5434:5432
+        env:
+          POSTGRES_USER: bookstore_dev
+          POSTGRES_PASSWORD: bookstore_dev
+          POSTGRES_DB: bookstore_dev_db
+        # Garante que o serviço do banco de dados esteja pronto antes de prosseguir
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -19,6 +35,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
       - name: Install poetry
         run: |
@@ -30,7 +51,18 @@ jobs:
         shell: bash
         run: poetry install
 
-      # Executa os testes diretamente, sem Docker.
-      # Para o ambiente de CI/CD, é uma boa prática usar um banco de dados in-memory como o SQLite.
-      - name: Run Tests with SQLite
-        run: poetry run python manage.py test
+      # Inicia os serviços Docker
+      - name: Start Docker Compose services
+        run: docker-compose up -d --build
+
+      # Etapa crucial: espera o banco de dados estar pronto e aplica as migrações
+      - name: Run Migrations
+        # Adicione um delay para garantir que o banco de dados esteja acessível
+        run: |
+          echo "Waiting for database to be ready..."
+          sleep 5
+          docker-compose exec -T web python manage.py migrate --noinput
+      
+      # Executa os testes dentro do contêiner, agora com as migrações aplicadas
+      - name: Run Tests
+        run: docker-compose exec -T web python manage.py test
