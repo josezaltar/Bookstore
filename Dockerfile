@@ -1,62 +1,52 @@
-# Usa a imagem oficial do Python, que é leve e otimizada
 FROM python:3.13-slim as python-base
 
-# Define variáveis de ambiente para garantir que Python e Poetry funcionem corretamente
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     \
-    # Configurações do pip
+    # pip
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
     \
-    # Configurações do Poetry
+    # poetry
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
     \
-    # Caminhos para o projeto
+    # paths
     PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv"
-# Adiciona os binários do Poetry e do venv ao PATH do sistema
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Instala as dependências do sistema e o Poetry em uma única camada para otimização
+# Instalar dependências do sistema e o Poetry
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
-    && pip install poetry --no-cache-dir \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* # Limpa o cache para reduzir o tamanho da imagem
+    && pip install poetry # Instala o Poetry globalmente dentro do contêiner
 
-# Instala as dependências do PostgreSQL (libpq-dev e gcc) em uma única camada
+# Instalar dependências do PostgreSQL (libpq-dev e psycopg2-binary)
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2-binary --no-cache-dir \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* # Limpa o cache para reduzir o tamanho da imagem
+    && pip install psycopg2-binary
 
-# Define o diretório de trabalho principal e copia os arquivos de configuração do Poetry
-# A ordem de cópia é importante para o cache do Docker
+# Definir o diretório de trabalho principal e copiar os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
-COPY poetry.lock pyproject.toml ./
+COPY poetry.lock pyproject.toml ./\
+COPY env.dev ./
 
-# Instala as dependências Python via Poetry
-# "--without dev": não instala dependências de desenvolvimento
-# "--no-root": evita instalar o próprio projeto como um pacote
-RUN poetry install --without dev --no-root
+# Instalar as dependências Python via Poetry *aqui*
+# REMOVIDO: --without dev para garantir que as dependências de desenvolvimento
+# (como debug-toolbar) sejam instaladas para o ambiente de teste
+RUN poetry install --no-root
 
-# Agora, copia o restante do código da aplicação
-# Esta é a última camada, então o Docker pode usar o cache da instalação de dependências
-# se apenas o código da aplicação mudar.
+# Agora, copiar o restante do código da aplicação
+# Isso garante que a camada de instalação de dependências possa ser cacheada
+# se apenas o código da aplicação mudar e não as dependências.
 COPY . .
 
 # Expor a porta que o Django vai usar
 EXPOSE 8000
 
-# O comando de inicialização é removido daqui.
-# No Render, você definirá o "Start Command" no painel,
-# o que permite maior flexibilidade e automação de tarefas de deploy.
-# O comando a ser usado no Render será:
-# poetry run python manage.py collectstatic --noinput && poetry run python manage.py migrate && poetry run gunicorn bookstore.wsgi:application --bind 0.0.0.0:$PORT
+# Comando para iniciar o servidor Django usando Poetry
+CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
