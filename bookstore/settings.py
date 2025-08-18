@@ -25,7 +25,6 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
-# Adicione seu endereço do PythonAnywhere aos ALLOWED_HOSTS
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -75,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.template.context_processors.messages",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -156,4 +156,5 @@ REST_FRAMEWORK = {
 
 INTERNAL_IPS = [
     "127.0.0.1",
+    "ebac-bookstore.onrender.com",
 ]
