@@ -62,8 +62,9 @@ jobs:
         run: |
           echo "Waiting for database to be ready..."
           sleep 5
-          docker-compose exec -T web python manage.py migrate --noinput
+          # Usa sh -c para passar a variável de ambiente para o comando
+          docker-compose exec -T web sh -c "DEBUG_TOOLBAR_ENABLED=1 python manage.py migrate --noinput"
       
       # Executa os testes dentro do contêiner, agora com as migrações aplicadas
       - name: Run Tests
-        run: docker-compose exec -T web python manage.py test
+        run: docker-compose exec -T web sh -c "DEBUG_TOOLBAR_ENABLED=1 python manage.py test"
