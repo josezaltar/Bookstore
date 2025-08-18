@@ -21,18 +21,21 @@ ENV PYTHONUNBUFFERED=1 \
 # Adiciona os binários do Poetry e do venv ao PATH do sistema
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Instala as dependências do sistema e o Poetry
+# Instala as dependências do sistema e o Poetry em uma única camada para otimização
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
-    && pip install poetry # Instala o Poetry globalmente dentro do contêiner
+    && pip install poetry --no-cache-dir \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* # Limpa o cache para reduzir o tamanho da imagem
 
-# Instala as dependências do PostgreSQL (libpq-dev e gcc)
-# Estas são necessárias para o pacote psycopg2-binary
+# Instala as dependências do PostgreSQL (libpq-dev e gcc) em uma única camada
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2-binary
+    && pip install psycopg2-binary --no-cache-dir \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* # Limpa o cache para reduzir o tamanho da imagem
 
 # Define o diretório de trabalho principal e copia os arquivos de configuração do Poetry
 # A ordem de cópia é importante para o cache do Docker
