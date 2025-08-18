@@ -23,12 +23,14 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
-    && pip install poetry # Instala o Poetry globalmente dentro do contêiner
+    && pip install --no-cache-dir poetry \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependências do PostgreSQL (libpq-dev e psycopg2-binary)
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2-binary
+    && pip install --no-cache-dir psycopg2-binary \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Definir o diretório de trabalho principal e copiar os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
@@ -36,8 +38,6 @@ COPY poetry.lock pyproject.toml ./\
 COPY env.dev ./
 
 # Instalar as dependências Python via Poetry *aqui*
-# REMOVIDO: --without dev para garantir que as dependências de desenvolvimento
-# (como debug-toolbar) sejam instaladas para o ambiente de teste
 RUN poetry install --no-root
 
 # Agora, copiar o restante do código da aplicação
