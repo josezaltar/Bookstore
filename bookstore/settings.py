@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
-import dj_database_url  # Importe dj_database_url
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,16 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Use uma variável de ambiente para a SECRET_KEY em produção
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
 )
-# A chave padrão (django-insecure-...) será usada apenas se SECRET_KEY não for definida no ambiente.
-# No Render, você definirá SECRET_KEY como uma variável de ambiente forte.
+# A chave padrão será usada apenas se SECRET_KEY não for definida no ambiente.
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG deve ser False em produção. Use 0 ou 1 do ambiente para controle.
-DEBUG = int(os.environ.get("DEBUG", 0))  # Converte para int para garantir False/True
+DEBUG = int(os.environ.get("DEBUG", 0))
 
 # ALLOWED_HOSTS para o Render e desenvolvimento local
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
@@ -39,8 +36,8 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Application definition
 
+# Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -55,8 +52,9 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
 ]
 
-# Adicione django-debug-toolbar apenas se DEBUG for True
-if DEBUG:
+# Adicione django-debug-toolbar apenas se DEBUG_TOOLBAR_ENABLED for 1
+DEBUG_TOOLBAR_ENABLED = int(os.environ.get("DEBUG_TOOLBAR_ENABLED", 0))
+if DEBUG_TOOLBAR_ENABLED:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
@@ -65,7 +63,7 @@ if DEBUG:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # Adicione Whitenoise para servir arquivos estáticos em produção ANTES do CommonMiddleware
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Adicione esta linha
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -74,11 +72,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Adicione debug_toolbar.middleware.DebugToolbarMiddleware apenas se DEBUG for True
-if DEBUG:
-    MIDDLEWARE.insert(
-        0, "debug_toolbar.middleware.DebugToolbarMiddleware"
-    )  # Inserir no início da lista
+# Adicione debug_toolbar.middleware.DebugToolbarMiddleware apenas se DEBUG_TOOLBAR_ENABLED for 1
+if DEBUG_TOOLBAR_ENABLED:
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "bookstore.urls"
 
@@ -103,20 +99,16 @@ WSGI_APPLICATION = "bookstore.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-# Configuração de banco de dados para desenvolvimento local (se DATABASE_URL não estiver definida)
-# e para produção (usando DATABASE_URL do Render)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
-            conn_max_age=600,  # Tempo de vida máximo das conexões (em segundos)
-            conn_health_checks=True,  # Habilita health checks de conexão
+            conn_max_age=600,
+            conn_health_checks=True,
         )
     }
 else:
-    # Configuração de banco de dados para desenvolvimento local (do seu env.dev)
     DATABASES = {
         "default": {
             "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
@@ -166,12 +158,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
-# Onde `collectstatic` vai copiar os arquivos estáticos para produção
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Use Whitenoise para servir arquivos estáticos em produção
-# Isso é crucial para o Render quando não se usa um serviço de Static Site dedicado.
-# Ele deve ser usado APENAS em produção (quando DEBUG é False)
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -193,13 +182,10 @@ REST_FRAMEWORK = {
 }
 
 # INTERNAL_IPS para django-debug-toolbar
-# Ativo apenas se DEBUG for True
-if DEBUG:
+if DEBUG_TOOLBAR_ENABLED:
     INTERNAL_IPS = [
         "127.0.0.1",
-        # Adicione o IP do seu ambiente de desenvolvimento se precisar acessar o debug toolbar de outra máquina
-        # ou o Render pode injetar o IP do cliente.
     ]
 
-# Configuração adicional para o django-extensions (opcional, apenas para desenvolvimento)
-SHELL_PLUS = "ipython"  # ou 'bpython'
+# Configuração adicional para o django-extensions
+SHELL_PLUS = "ipython"
