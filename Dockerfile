@@ -34,7 +34,7 @@ RUN apt-get update \
 
 # Definir o diretório de trabalho principal e copiar os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
-COPY poetry.lock pyproject.toml ./\
+COPY poetry.lock pyproject.toml ./
 COPY env.dev ./
 
 # Instalar as dependências Python via Poetry *aqui*
