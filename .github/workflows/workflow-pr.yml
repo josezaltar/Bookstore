@@ -1,0 +1,70 @@
+name: Python Pull Request Workflow
+
+on: [pull_request]
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+
+    services:
+      # Adicionando um serviço PostgreSQL para os testes
+      db:
+        image: postgres:13
+        ports:
+          - 5434:5432
+        env:
+          POSTGRES_USER: bookstore_dev
+          POSTGRES_PASSWORD: bookstore_dev
+          POSTGRES_DB: bookstore_dev_db
+        # Garante que o serviço do banco de dados esteja pronto antes de prosseguir
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.13  # Sincronizado com a sua versão do pyproject.toml
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Install poetry
+        run: |
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade poetry
+
+      - name: Install dependencies
+        shell: bash
+        run: poetry install
+
+      - name: Check code style with Wemake
+        uses: wemake-services/wemake-python-styleguide@0.16.0
+        with:
+          reporter: 'github-pr-review'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Inicia os serviços Docker para rodar os testes
+      - name: Start Docker Compose services
+        run: docker-compose up -d --build
+
+      # Etapa crucial: espera o banco de dados estar pronto e aplica as migrações
+      - name: Run Migrations
+        run: |
+          echo "Waiting for database to be ready..."
+          sleep 5
+          docker-compose exec -T web python manage.py migrate --noinput
+
+      # Executa os testes dentro do contêiner, agora com as migrações aplicadas
+      - name: Run Tests
+        run: docker-compose exec -T web python manage.py test

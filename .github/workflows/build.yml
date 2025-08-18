@@ -1,0 +1,36 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # A versão do Python deve corresponder ao seu pyproject.toml
+        python-version: [3.13]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install poetry
+        run: |
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade poetry
+
+      - name: Install dependencies
+        shell: bash
+        run: poetry install
+
+      # Executa os testes diretamente, sem Docker.
+      # Para o ambiente de CI/CD, é uma boa prática usar um banco de dados in-memory como o SQLite.
+      - name: Run Tests with SQLite
+        run: poetry run python manage.py test
