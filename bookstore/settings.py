@@ -20,13 +20,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
+# Use variáveis de ambiente para SECRET_KEY e DEBUG
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+# Adicione seu endereço do PythonAnywhere aos ALLOWED_HOSTS
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "ebac-bookstore.onrender.com",
+]
 
 
 # Application definition
@@ -70,7 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.messages",
             ],
         },
     },
@@ -152,17 +156,4 @@ REST_FRAMEWORK = {
 
 INTERNAL_IPS = [
     "127.0.0.1",
-]
-
-SECRET_KEY = os.environ.get("SECRET_KEY")
-
-DEBUG = int(os.environ.get("DEBUG", default=0))
-
-# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
-# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "ebac-bookstore-api.herokuapp.com",
-    "drsantos20.pythonanywhere.com",
 ]
