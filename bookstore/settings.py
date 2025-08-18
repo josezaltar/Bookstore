@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-import dj_database_url  # Importando dj_database_url para configurar o DB
+import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,13 +20,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-# Use variáveis de ambiente para SECRET_KEY e DEBUG
 SECRET_KEY = os.environ.get("SECRET_KEY", "5eeed80638efc3426e568d4720c10ae5")
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
 # Adicione o endereço do Render aos ALLOWED_HOSTS
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "ebac-bookstore.onrender.com"]
+# O Render define a variável de ambiente 'RENDER', podemos usá-la
+# para detectar se estamos em produção.
+if os.environ.get("RENDER"):
+    ALLOWED_HOSTS = [os.environ.get("RENDER_EXTERNAL_HOSTNAME")]
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
 
 # Application definition
 
@@ -83,12 +88,26 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Database
-# Use dj-database-url para ler a URL do banco de dados do Render
-DATABASES = {
-    "default": dj_database_url.config(
-        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3")
-    )
-}
+# A mágica acontece aqui:
+# Use a URL de ambiente 'DATABASE_URL' se ela existir (no Render)
+# Caso contrário, configure para o banco de dados do seu Docker Compose
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"), conn_max_age=600
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ.get("SQL_ENGINE"),
+            "NAME": os.environ.get("SQL_DATABASE"),
+            "USER": os.environ.get("SQL_USER"),
+            "PASSWORD": os.environ.get("SQL_PASSWORD"),
+            "HOST": os.environ.get("SQL_HOST"),
+            "PORT": os.environ.get("SQL_PORT"),
+        }
+    }
 
 
 # Password validation
