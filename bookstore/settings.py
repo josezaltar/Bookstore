@@ -187,5 +187,4 @@ if DEBUG_TOOLBAR_ENABLED:
         "127.0.0.1",
     ]
 
-# Configuração adicional para o django-extensions
 SHELL_PLUS = "ipython"
