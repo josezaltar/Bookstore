@@ -26,8 +26,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "5eeed80638efc3426e568d4720c10ae5")
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
 # Adicione o endereço do Render aos ALLOWED_HOSTS
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
-
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "ebac-bookstore.onrender.com"]
 
 # Application definition
 
