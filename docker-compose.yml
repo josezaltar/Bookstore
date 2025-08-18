@@ -1,15 +1,13 @@
 services:
   web:
     build: .
-    command: poetry run python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - app_data:/usr/src/app/
     ports:
       - 8000:8000
     env_file:
       - ./env.dev
-    environment:
-      - DEBUG_TOOLBAR_ENABLED=1
     networks:
       - backend
     depends_on:
