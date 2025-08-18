@@ -29,12 +29,36 @@ dependencies = [
 name = "bookstore"
 version = "0.1.0"
 description = "API da Bookstore com Django Rest Framework"
-authors = ["Seu Nome <seu.email@example.com>"]
+authors = ["José Zaltar <josezaltar@email.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.13"
+django = ">=5.2.4,<6.0.0"
+djangorestframework = ">=3.16.0,<4.0.0"
+django-extensions = ">=4.1,<5.0"
+django-debug-toolbar = ">=6.0.0,<7.0.0"
+whitenoise = ">=6.9.0,<7.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
+gunicorn = ">=23.0.0,<24.0.0"
+dj-database-url = ">=3.0.1,<4.0.0"
+gitpython = ">=3.1.45,<4.0.0"
+flake8 = ">=7.3.0,<8.0.0"
+# Note: Removi as dependências de testes daqui para o grupo dev
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-factory-boy = "^3.3.3"
+pytest = ">=8.4.1,<9.0.0"
+factory-boy = ">=3.3.3,<4.0.0"
+faker = ">=37.5.3,<38.0.0"
+pytest-django = ">=4.11.1,<5.0.0"
+black = "^24.4.2" # Adicionei black para formatação de código
+mypy = "^1.10.0" # Adicionei mypy para tipagem
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 118
+target-version = ['py313']
