@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "ebac-bookstore.onrender.com",
+    # Você pode adicionar outros domínios aqui, como o do PythonAnywhere
 ]
 
 
@@ -156,4 +157,5 @@ REST_FRAMEWORK = {
 
 INTERNAL_IPS = [
     "127.0.0.1",
+    "ebac-bookstore.onrender.com",
 ]
