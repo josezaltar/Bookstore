@@ -1,5 +1,7 @@
+# Usa uma imagem base Python slim para um tamanho menor
 FROM python:3.13-slim as python-base
 
+# Configura variáveis de ambiente
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     \
@@ -16,37 +18,40 @@ ENV PYTHONUNBUFFERED=1 \
     # paths
     PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv"
+
+# Adiciona o caminho do Poetry e do venv ao PATH
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Instalar dependências do sistema e o Poetry
+# Instala dependências do sistema e o Poetry
+# O comando `rm -rf /var/lib/apt/lists/*` limpa o cache do apt
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
-    && pip install poetry # Instala o Poetry globalmente dentro do contêiner
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir poetry
 
-# Instalar dependências do PostgreSQL (libpq-dev e psycopg2-binary)
+# Instala dependências do PostgreSQL (libpq-dev e psycopg2-binary)
+# O comando `rm -rf /var/lib/apt/lists/*` limpa o cache do apt
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2-binary
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir psycopg2-binary
 
-# Definir o diretório de trabalho principal e copiar os arquivos de configuração do Poetry
+# Define o diretório de trabalho principal e copia os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock pyproject.toml ./
 
-# Instalar as dependências Python via Poetry *aqui*
+# Instala as dependências Python via Poetry *aqui*
 # --without dev: não instala dependências de desenvolvimento
 # --no-root: evita instalar o próprio projeto como um pacote, o que é comum para apps Django
 RUN poetry install --without dev --no-root
 
-# Agora, copiar o restante do código da aplicação
-# Isso garante que a camada de instalação de dependências possa ser cacheada
-# se apenas o código da aplicação mudar e não as dependências.
+# Agora, copia o restante do código da aplicação
 COPY . .
 
-# Expor a porta que o Django vai usar
+# Expõe a porta que o Django vai usar
 EXPOSE 8000
 
 # Comando para iniciar o servidor Django usando Poetry
-# 'poetry run' garante que o comando seja executado dentro do ambiente virtual do Poetry
 CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
