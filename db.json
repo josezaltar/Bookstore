@@ -1,0 +1,17 @@
+[
+  {
+    "model": "product.author",
+    "pk": 1,
+    "fields": {
+      "name": "Autor Teste"
+    }
+  },
+  {
+    "model": "product.book",
+    "pk": 1,
+    "fields": {
+      "title": "Livro de Exemplo",
+      "author": 1
+    }
+  }
+]
