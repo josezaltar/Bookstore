@@ -1,0 +1,32 @@
+# A seção [tool.poetry] é a forma preferida de Poetry para gerenciar metadados e dependências
+[tool.poetry]
+name = "bookstore"
+version = "0.1.0"
+description = "API da Bookstore com Django Rest Framework"
+authors = ["José Zaltar <josezaltar@email.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+# Dependências de produção
+python = ">=3.13" # Garante compatibilidade com a versão do Python no Dockerfile
+django = ">=5.2.4,<6.0.0"
+djangorestframework = ">=3.16.0,<4.0.0"
+django-extensions = ">=4.1,<5.0"
+whitenoise = ">=6.9.0,<7.0.0"
+gunicorn = ">=23.0.0,<24.0.0"
+dj-database-url = ">=2.1.0,<3.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
+# O asgiref é uma dependência transitiva do Django, não é necessário listá-la explicitamente.
+
+[tool.poetry.group.dev.dependencies]
+# Dependências de desenvolvimento
+pytest = ">=8.4.1,<9.0.0"
+pytest-django = ">=4.11.1,<5.0.0"
+factory-boy = ">=3.3.3,<4.0.0"
+faker = ">=37.5.3,<38.0.0"
+django-debug-toolbar = ">=6.0.0,<7.0.0"
+flake8 = ">=7.3.0,<8.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
