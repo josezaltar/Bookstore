@@ -14,15 +14,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-import debug_toolbar
+import os
 from django.contrib import admin
 from django.urls import include, path, re_path
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
-    path("__debug__/", include(debug_toolbar.urls)),
     path("admin/", admin.site.urls),
-    re_path("bookstore/(?P<version>(v1|v2))/", include("order.urls")),
-    re_path("bookstore/(?P<version>(v1|v2))/", include("product.urls")),
+    re_path("bookstore/(?P<version>(v1|v2))/order/", include("order.urls")),
+    re_path("bookstore/(?P<version>(v1|v2))/product/", include("product.urls")),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
 ]
+
+# Condiciona a inclusão do debug_toolbar ao ambiente de desenvolvimento
+if int(os.environ.get("DEBUG_TOOLBAR_ENABLED", 0)):
+    import debug_toolbar
+
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
