@@ -1,5 +1,5 @@
 # Usa uma imagem base Python slim para um tamanho menor
-FROM python:3.13-slim as python-base
+FROM python:3.13-slim AS python-base
 
 # Configura variáveis de ambiente
 ENV PYTHONUNBUFFERED=1 \
