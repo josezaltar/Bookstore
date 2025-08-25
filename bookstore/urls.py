@@ -3,7 +3,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 # Importa os routers dos apps
 from order.urls import router as order_router
-from product import admin
+from django.contrib import admin
 from product.urls import router as product_router
 
 urlpatterns = [
