@@ -1,5 +1,5 @@
 # Usa uma imagem base Python slim para um tamanho menor
-FROM python:3.13-slim as python-base
+FROM python:3.13-slim AS python-base
 
 # Configura variáveis de ambiente
 ENV PYTHONUNBUFFERED=1 \
@@ -12,44 +12,36 @@ ENV PYTHONUNBUFFERED=1 \
     \
     # poetry
     POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
     \
     # paths
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
-
-# Adiciona o caminho do Poetry e do venv ao PATH
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+    PYSETUP_PATH="/opt/pysetup"
+ENV PATH="$POETRY_HOME/bin:$PATH"
 
 # Instala dependências do sistema e o Poetry
-# A nova linha "rm -rf /var/lib/apt/lists/*" remove o cache do apt
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
         build-essential \
+        libpq-dev \
+        gcc \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir poetry # Adicionado --no-cache-dir
-
-# Instala dependências do PostgreSQL (libpq-dev e psycopg2-binary)
-# A nova linha "rm -rf /var/lib/apt/lists/*" remove o cache do apt
-RUN apt-get update \
-    && apt-get -y install libpq-dev gcc \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir psycopg2-binary # Adicionado --no-cache-dir
+    && pip install --no-cache-dir poetry
 
 # Define o diretório de trabalho principal e copia os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock pyproject.toml ./
 
-# Instala as dependências Python via Poetry
-RUN poetry install --without dev --no-root
+# Configura o Poetry para não criar um ambiente virtual e instala as dependências
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --only main
 
 # Agora, copia o restante do código da aplicação
 COPY . .
 
-# Expõe a porta que o Django vai usar
+# Expor a porta que o Django vai usar
 EXPOSE 8000
 
-# Comando para iniciar o servidor Django usando Poetry
-CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Comando para iniciar o servidor Django
+# Agora, podemos usar 'python' diretamente em vez de 'poetry run'
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
