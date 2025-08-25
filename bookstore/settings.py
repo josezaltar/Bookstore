@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,21 +22,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-f*k@=53bc5!shef1-6w+m$-g)kspbaljz%8k4(j7iuc-u2_dyd"
+)
+# A chave padrão será usada apenas se SECRET_KEY não for definida no ambiente.
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", 0))
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "ebac-bookstore-api.herokuapp.com",
-    "drsantos20.pythonanywhere.com",
-]
+# ALLOWED_HOSTS para o Render e desenvolvimento local
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -47,28 +49,39 @@ INSTALLED_APPS = [
     "order",
     "product",
     "rest_framework",
-    "debug_toolbar",
     "rest_framework.authtoken",
 ]
 
+# Adicione django-debug-toolbar apenas se DEBUG_TOOLBAR_ENABLED for 1
+DEBUG_TOOLBAR_ENABLED = int(os.environ.get("DEBUG_TOOLBAR_ENABLED", 0))
+if DEBUG_TOOLBAR_ENABLED:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Adicione Whitenoise para servir arquivos estáticos em produção ANTES do CommonMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
+
+# Adicione debug_toolbar.middleware.DebugToolbarMiddleware apenas se DEBUG_TOOLBAR_ENABLED for 1
+if DEBUG_TOOLBAR_ENABLED:
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "bookstore.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "bookstore", "templates")],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -86,17 +99,27 @@ WSGI_APPLICATION = "bookstore.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
+            "USER": os.environ.get("SQL_USER", ""),
+            "PASSWORD": os.environ.get("SQL_PASSWORD", ""),
+            "HOST": os.environ.get("SQL_HOST", ""),
+            "PORT": os.environ.get("SQL_PORT", ""),
+        }
+    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -135,6 +158,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Use Whitenoise para servir arquivos estáticos em produção
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -152,10 +181,10 @@ REST_FRAMEWORK = {
     ],
 }
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+# INTERNAL_IPS para django-debug-toolbar
+if DEBUG_TOOLBAR_ENABLED:
+    INTERNAL_IPS = [
+        "127.0.0.1",
+    ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-STATIC_ROOT = BASE_DIR / "staticfiles"
+SHELL_PLUS = "ipython"

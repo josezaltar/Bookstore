@@ -1,4 +1,5 @@
-FROM python:3.13-slim as python-base
+FROM python:3.13-slim AS python-base
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     \
@@ -17,19 +18,35 @@ ENV PYTHONUNBUFFERED=1 \
     VENV_PATH="/opt/pysetup/.venv"
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# Instalar dependências e o Poetry
+# Instalar dependências do sistema e o Poetry
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         curl \
-        build-essential
-RUN pip install poetry
+        build-essential \
+    && pip install --no-cache-dir poetry \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instalar dependências do PostgreSQL (libpq-dev e psycopg2-binary)
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
-    && pip install psycopg2-binary
+    && pip install --no-cache-dir psycopg2-binary \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Definir o diretório de trabalho principal e copiar os arquivos de configuração do Poetry
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock pyproject.toml ./
-COPY README.md ./
+COPY env.dev ./
+
+# Instalar as dependências Python via Poetry *aqui*
+RUN poetry install --no-root
+
+# Agora, copiar o restante do código da aplicação
+# Isso garante que a camada de instalação de dependências possa ser cacheada
+# se apenas o código da aplicação mudar e não as dependências.
 COPY . .
-RUN poetry install --without dev
+
+# Expor a porta que o Django vai usar
 EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Comando para iniciar o servidor Django usando Poetry
+CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
