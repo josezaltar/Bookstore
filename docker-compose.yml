@@ -3,7 +3,7 @@ services:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/opt/pysetup/
+      - app_data:/usr/src/app/
     ports:
       - 8000:8000
     env_file:
@@ -14,7 +14,7 @@ services:
   db:
     image: postgres:16.0-alpine
     ports:
-      - 5432:5432
+      - 5433:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:

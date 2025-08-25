@@ -1,11 +1,4 @@
-.venv/
-venv/
-__pycache__/
+__pycache__
 *.pyc
-*.sqlite3
-.pytest_cache/
-.mypy_cache/
-.DS_Store
-.vscode/
-.git/
-.gitignore
+env/
+db.sqlite3
