@@ -30,8 +30,15 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get("DEBUG", 0))
 
-# ALLOWED_HOSTS para o Render e desenvolvimento local
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(" ")
+# --- CONFIGURAÇÃO CORRIGIDA DE ALLOWED_HOSTS ---
+# Adiciona o domínio do PythonAnywhere à lista de hosts permitidos.
+# Lembre-se de substituir 'josezaltar.pythonanywhere.com' pelo seu domínio real.
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "josezaltar.pythonanywhere.com",  # Adicionado para o PythonAnywhere
+]
+
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)

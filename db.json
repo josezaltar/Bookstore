@@ -1,0 +1,70 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$260000$g9V31JkYgD7E$t/LhN2nL+fJ2J9SjVjA3hLqW+2/l+rWw/h2Jt4M/jI8=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2023-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "product.category",
+    "pk": 1,
+    "fields": {
+      "title": "Ficção",
+      "slug": "ficcao",
+      "description": "Livros de ficção em geral",
+      "active": true
+    }
+  },
+  {
+    "model": "product.category",
+    "pk": 2,
+    "fields": {
+      "title": "Não-Ficção",
+      "slug": "nao-ficcao",
+      "description": "Livros de não-ficção",
+      "active": true
+    }
+  },
+  {
+    "model": "product.product",
+    "pk": 1,
+    "fields": {
+      "title": "Livro de Ficção",
+      "description": "Uma história incrível de um mundo imaginário.",
+      "price": 4990,
+      "active": true,
+      "category": [1]
+    }
+  },
+  {
+    "model": "product.product",
+    "pk": 2,
+    "fields": {
+      "title": "Biografia de Um Herói",
+      "description": "A história de vida de uma figura pública.",
+      "price": 5990,
+      "active": true,
+      "category": [2]
+    }
+  },
+  {
+    "model": "order.order",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "product": [1, 2]
+    }
+  }
+]
